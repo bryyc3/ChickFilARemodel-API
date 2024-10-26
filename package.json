@@ -1,0 +1,24 @@
+{
+  "name": "chickfila-api",
+  "version": "1.0.0",
+  "description": "Handles requests from Chick-Fil-A remodeled app and connects to the MySQL database in order to store and retrieve data such as: menu items, user member status and the amount of points user has accumulated.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.0.1",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

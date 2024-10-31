@@ -16,3 +16,29 @@ export async function getMenuItems(){
     return items;
 }
 
+export async function getUserData(){
+    const [user] = await pool.query(
+        `SELECT * FROM user`
+    )
+    return user[0];
+}
+
+export async function addPoints(itemName){
+    const [userPoints] = await pool.query(
+        `SELECT points_acquired from user `
+    )
+    const [itemPoints] = await pool.query(
+        `SELECT points_worth from menu where item = ?`, itemName
+    )
+    const newUserPoints = userPoints[0].points_acquired + itemPoints[0].points_worth
+    await pool.query(
+        `UPDATE user
+         SET points_acquired = ?`, newUserPoints
+    )
+
+    const [user] = await pool.query(
+        `SELECT * FROM user`
+    )
+    return user[0]
+}
+

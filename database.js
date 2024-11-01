@@ -14,31 +14,57 @@ export async function getMenuItems(){
         `SELECT * FROM menu`
     )
     return items;
-}
+}//get all items available on menu
 
 export async function getUserData(){
     const [user] = await pool.query(
         `SELECT * FROM user`
     )
     return user[0];
-}
+}//get all data associated with user 
 
 export async function addPoints(itemName){
-    const [userPoints] = await pool.query(
+    const [userPts] = await pool.query(
         `SELECT points_acquired from user `
     )
-    const [itemPoints] = await pool.query(
-        `SELECT points_worth from menu where item = ?`, itemName
+    const [itemInfo] = await pool.query(
+        `SELECT * from menu where item = ?`, itemName
     )
-    const newUserPoints = userPoints[0].points_acquired + itemPoints[0].points_worth
-    await pool.query(
-        `UPDATE user
-         SET points_acquired = ?`, newUserPoints
-    )
+
+    let userPoints = userPts[0]
+    const item = itemInfo[0]
+
+    let newUserPoints = userPoints.points_acquired + item.points_worth
+    
+    if(newUserPoints >= 10000){
+        const status = 'signature'
+        await pool.query(
+            `UPDATE user
+             SET points_acquired = ?, status = ?`, [newUserPoints, status]
+        )
+    } else if(newUserPoints >= 5000){
+        const status = 'red'
+        await pool.query(
+            `UPDATE user
+             SET points_acquired = ?, status = ?`, [newUserPoints, status]
+        )
+    } else if(newUserPoints >= 1000){
+        const status = 'silver'
+        await pool.query(
+            `UPDATE user
+             SET points_acquired = ?, status = ?`, [newUserPoints, status]
+        )
+    } 
+    else{
+        await pool.query(
+            `UPDATE user
+             SET points_acquired = ?`, newUserPoints
+        )
+    }//update points and change status if point goal is reached  
 
     const [user] = await pool.query(
         `SELECT * FROM user`
     )
-    return user[0]
+    return user[0]//return user so points change can be reflected in app
 }
 

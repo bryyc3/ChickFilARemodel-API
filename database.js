@@ -12,7 +12,7 @@ const pool = mysql.createPool({
 export async function getMenuItems(){
     const [items] = await pool.query(
         `SELECT * FROM menu`
-    )
+    );
     return items;
 }//get all items available on menu
 
@@ -26,10 +26,10 @@ export async function getUserData(){
 export async function addPoints(itemName){
     const [userPts] = await pool.query(
         `SELECT points_acquired from user `
-    )
+    );
     const [itemInfo] = await pool.query(
         `SELECT * from menu where item = ?`, itemName
-    )
+    );
 
     let userPoints = userPts[0]
     const item = itemInfo[0]
@@ -41,30 +41,88 @@ export async function addPoints(itemName){
         await pool.query(
             `UPDATE user
              SET points_acquired = ?, status = ?`, [newUserPoints, status]
-        )
+        );
+        await pool.query(
+            `INSERT INTO purchases (category)
+             VALUES (?)`, item.category
+        );
+        await setMostPurchased();
     } else if(newUserPoints >= 5000){
         const status = 'red'
         await pool.query(
             `UPDATE user
              SET points_acquired = ?, status = ?`, [newUserPoints, status]
-        )
+        );
     } else if(newUserPoints >= 1000){
         const status = 'silver'
         await pool.query(
             `UPDATE user
              SET points_acquired = ?, status = ?`, [newUserPoints, status]
-        )
+        );
     } 
     else{
         await pool.query(
             `UPDATE user
              SET points_acquired = ?`, newUserPoints
-        )
+        );
     }//update points and change status if point goal is reached  
 
     const [user] = await pool.query(
         `SELECT * FROM user`
-    )
+    );
     return user[0]//return user so points change can be reflected in app
 }
+
+async function setMostPurchased(){
+    const [purchases] = await pool.query(
+        `SELECT * FROM purchases`
+    );
+    const mostPurchased = findModes(purchases)
+    
+    if(mostPurchased.length > 1){
+        const max = mostPurchased.length
+        const randomIndex = Math.floor(Math.random() *  max);
+        await pool.query(
+            `UPDATE user 
+             SET most_purchased = ?`, mostPurchased[randomIndex]
+        )
+    }//if user purchases from multiple categories the same amount of times
+    //choose a random category to set as their most purchased 
+    else{
+        await pool.query(
+            `UPDATE user 
+            SET most_purchased = ?`, mostPurchased[0]
+        )
+    }//set most purchased category if there is only
+    //one category they purchase most
+
+}//determine the most purchased categories 
+//set users most purchased to the category
+
+
+function findModes(arr) {
+
+    // Create a frequency map
+    const frequencyMap = {};
+    arr.forEach(category => {
+        frequencyMap[category.category] =
+            (frequencyMap[category.category]|| 0) + 1;
+    });
+
+    let modes = [];
+    let maxFrequency = 0;
+
+
+    for (const category in frequencyMap) {
+        const frequency = frequencyMap[category];
+        if (frequency > maxFrequency) {
+            maxFrequency = frequency;
+            modes = [category];
+        } else if (frequency === maxFrequency) {
+            modes.push(category);
+        }
+    }
+
+    return modes;
+}//determine the categories that the user purchases most
 

@@ -99,6 +99,48 @@ async function setMostPurchased(){
 }//determine the most purchased categories 
 //set users most purchased to the category
 
+export async function generateReward(){
+    const [userInfo] = await pool.query(
+        `SELECT * FROM user`
+    );
+
+    const userData = userInfo[0]
+    let possibleRewards
+
+
+    if (userData.status === 'signature'){
+         [possibleRewards] = await pool.query(
+            `SELECT * FROM menu WHERE category = ?`, userData.most_purchased
+        );
+    }
+    else{
+        const status = "plebeian";
+        [possibleRewards] = await pool.query(
+            `SELECT * FROM menu WHERE status = ?`, status
+        );
+    }
+
+    const max = possibleRewards.length
+        const randomIndex = Math.floor(Math.random() *  max);
+        await pool.query(
+            `INSERT INTO rewards (item, picture) 
+             VALUES (?, ?)`, [possibleRewards[randomIndex].item, 
+                              possibleRewards[randomIndex].picture]
+        );
+
+    const [rewards] = await pool.query(
+        `SELECT * FROM rewards`
+    );
+    return rewards;
+}//simulate local operator sending reward to customer 
+
+
+export async function getRewards(){
+    const [rewards] = await pool.query(
+        `SELECT * FROM rewards`
+    );
+    return rewards;
+}
 
 function findModes(arr) {
 

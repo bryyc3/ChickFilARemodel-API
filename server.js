@@ -1,5 +1,5 @@
 import express from 'express';
-import { getMenuItems, getUserData, addPoints } from './database.js';
+import { getMenuItems, getUserData, addPoints, generateReward, getRewards } from './database.js';
 
 const app = express();
 
@@ -22,6 +22,15 @@ app.post('/purchase', async (req, res) => {
     res.json(userPointsAdded)
 })
 
+app.get('/rewards', async (req, res) =>{
+    const rewards = await getRewards();
+    res.json(rewards)
+})
+
+app.get('/send-reward', async (req, res) =>{
+    const userRewards = await generateReward();
+    res.json(userRewards)
+})
 
 app.listen(8080, ()=>{
     console.log('Server running on port 8080');

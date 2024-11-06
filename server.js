@@ -1,5 +1,5 @@
 import express from 'express';
-import { getMenuItems, getUserData, addPoints, generateReward, getRewards } from './database.js';
+import { getMenuItems, getUserData, addPoints, generateReward, getRewards, redeemReward } from './database.js';
 
 const app = express();
 
@@ -30,6 +30,12 @@ app.get('/rewards', async (req, res) =>{
 app.get('/send-reward', async (req, res) =>{
     const userRewards = await generateReward();
     res.json(userRewards)
+})
+
+app.post('/redeem-reward', async (req, res) =>{
+    const rewardID = req.body;
+    const rewards = await redeemReward(rewardID);
+    res.json(rewards);
 })
 
 app.listen(8080, ()=>{

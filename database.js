@@ -140,7 +140,18 @@ export async function getRewards(){
         `SELECT * FROM rewards`
     );
     return rewards;
-}
+}//get rewards
+
+export async function redeemReward(rewardItem){
+    await pool.query(
+        `DELETE FROM rewards WHERE id = ?`, rewardItem.itemId
+    );
+
+    const [rewards] = await pool.query(
+        `SELECT * FROM rewards`
+    );
+    return rewards;
+}//delete reward once redeemed
 
 function findModes(arr) {
 

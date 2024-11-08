@@ -46,7 +46,6 @@ export async function addPoints(itemName){
             `INSERT INTO purchases (category)
              VALUES (?)`, item.category
         );
-        await setMostPurchased();
     } else if(newUserPoints >= 5000){
         const status = 'red'
         await pool.query(
@@ -73,35 +72,13 @@ export async function addPoints(itemName){
     return user[0]//return user so points change can be reflected in app
 }
 
-async function setMostPurchased(){
-    const [purchases] = await pool.query(
-        `SELECT * FROM purchases`
-    );
-    const mostPurchased = findModes(purchases)
-    
-    if(mostPurchased.length > 1){
-        const max = mostPurchased.length
-        const randomIndex = Math.floor(Math.random() *  max);
-        await pool.query(
-            `UPDATE user 
-             SET most_purchased = ?`, mostPurchased[randomIndex]
-        )
-    }//if user purchases from multiple categories the same amount of times
-    //choose a random category to set as their most purchased 
-    else{
-        await pool.query(
-            `UPDATE user 
-            SET most_purchased = ?`, mostPurchased[0]
-        )
-    }//set most purchased category if there is only
-    //one category they purchase most
-
-}//determine the most purchased categories 
-//set users most purchased to the category
-
 export async function generateReward(){
     const [userInfo] = await pool.query(
         `SELECT * FROM user`
+    );
+
+    const [purchases] = await pool.query(
+        `SELECT * FROM purchases`
     );
 
     const userData = userInfo[0]
@@ -109,16 +86,27 @@ export async function generateReward(){
 
 
     if (userData.status === 'signature'){
-         [possibleRewards] = await pool.query(
-            `SELECT * FROM menu WHERE category = ?`, userData.most_purchased
-        );
-    }
+        const mostPurchased = findModes(purchases)
+        if(mostPurchased.length > 1){
+            const max = mostPurchased.length
+            const randomIndex = Math.floor(Math.random() *  max);
+            [possibleRewards] = await pool.query(
+                `SELECT * FROM menu WHERE category = ?`, mostPurchased[randomIndex]
+            );
+        }//if user purchases from multiple categories the same amount of times
+        //choose one of those categories randomly to gift reward
+        else{
+            [possibleRewards] = await pool.query(
+                `SELECT * FROM menu WHERE category = ?`, mostPurchased[0]
+            );
+        }//set reward from most purchased if only one category has been purchased most
+    }//give signature reward
     else{
-        const status = "plebeian";
+        const status = "member";
         [possibleRewards] = await pool.query(
-            `SELECT * FROM menu WHERE status = ?`, status
+            `SELECT * FROM menu WHERE tier = ?`, status
         );
-    }
+    }//give member status reward 
 
     const max = possibleRewards.length
         const randomIndex = Math.floor(Math.random() *  max);
@@ -152,6 +140,7 @@ export async function redeemReward(rewardItem){
     );
     return rewards;
 }//delete reward once redeemed
+
 
 function findModes(arr) {
 
